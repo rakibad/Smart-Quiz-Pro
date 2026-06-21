@@ -1,0 +1,6 @@
+{
+  "name": "Smart Quiz Pro",
+  "description": "Premium Dynamic Online Quiz, Exam & Certification Platform with Anti-Cheat controls, secure Admin Dashboard, certificates verification, and bilingual (English/Bangla) mode.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
