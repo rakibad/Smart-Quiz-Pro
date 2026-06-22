@@ -11,7 +11,8 @@ import {
 import { 
   Users, BookOpen, HelpCircle, FileText, Settings, ShieldAlert, Plus, 
   Trash2, Edit, Save, Download, FileSpreadsheet, Lock, Sparkles, BarChart2,
-  Bell, CheckCircle, RefreshCw, Send, Trash, Eye, EyeOff, LayoutDashboard, Share2
+  Bell, CheckCircle, RefreshCw, Send, Trash, Eye, EyeOff, LayoutDashboard, Share2,
+  Copy, Check
 } from "lucide-react";
 import { useLanguage } from "./LanguageContext";
 import { GoogleAppsScriptCode } from "./GoogleAppsScriptCode";
@@ -50,8 +51,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // Custom persistent credentials stored in localStorage
   const [adminUserReal, setAdminUserReal] = useState(() => localStorage.getItem("admin_username") || "admin");
-  const [adminPassReal, setAdminPassReal] = useState(() => localStorage.getItem("admin_password") || "default123");
-  const [securityPinReal, setSecurityPinReal] = useState(() => localStorage.getItem("admin_pin") || "5588");
+  const [adminPassReal, setAdminPassReal] = useState(() => localStorage.getItem("admin_password") || "adminsecure25");
+  const [securityPinReal, setSecurityPinReal] = useState(() => localStorage.getItem("admin_pin") || "778899");
+
+  // Auto reset forgotten admin credentials to new clean defaults
+  useEffect(() => {
+    const savedPass = localStorage.getItem("admin_password");
+    if (!savedPass || savedPass === "default123" || localStorage.getItem("admin_cred_reset_v4") !== "true") {
+      localStorage.setItem("admin_username", "admin");
+      localStorage.setItem("admin_password", "adminsecure25");
+      localStorage.setItem("admin_pin", "778899");
+      localStorage.setItem("admin_cred_reset_v4", "true");
+      setAdminUserReal("admin");
+      setAdminPassReal("adminsecure25");
+      setSecurityPinReal("778899");
+    }
+  }, []);
 
   // Forgot Password / Reset State outside panel
   const [showResetGate, setShowResetGate] = useState(false);
@@ -84,6 +99,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [bulkImportJson, setBulkImportJson] = useState("");
   const [qSearch, setQSearch] = useState("");
   const [certQuery, setCertQuery] = useState("");
+  const [promptCopied, setPromptCopied] = useState(false);
 
   // 2. Exam Creator form
   const [examTitle, setExamTitle] = useState("");
@@ -557,14 +573,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           <div className="flex flex-col gap-2.5 py-1">
             <button
               type="button"
-              onClick={() => alert(language === "en" ? `Default Admin Credentials:\nID: ${adminUserReal}\nPassword: ${adminPassReal}\nPIN: ${securityPinReal}` : `ডিফল্ট এডমিন তথ্য:\nআইডি: ${adminUserReal}\nপাসওয়ার্ড: ${adminPassReal}\nপিন: ${securityPinReal}`)}
-              className="mx-auto text-[10px] text-cyan-400 hover:text-cyan-300 bg-slate-950/40 border border-slate-850 px-3 py-1.5 rounded-lg font-mono tracking-wide cursor-pointer flex items-center justify-center gap-1.5 hover:border-cyan-500/50"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              <span>{language === "en" ? "Show Credentials Hint" : "ডিফল্ট এডমিন তথ্য দেখুন"}</span>
-            </button>
-            <button
-              type="button"
               onClick={() => setShowResetGate(true)}
               className="text-slate-500 hover:text-rose-400 text-xxs font-semibold underline cursor-pointer"
             >
@@ -994,6 +1002,94 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 >
                   Process JSON Import Array
                 </button>
+              </div>
+
+              {/* Google AI / Gemini Unlimited MCQ Question Generator Prompter Block */}
+              <div className="bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-slate-850 p-5 rounded-xl text-left space-y-4 font-sans relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/5 rounded-full blur-xl pointer-events-none" />
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-indigo-950/60 border border-indigo-500/30 text-indigo-400 rounded-lg shrink-0">
+                    <Sparkles className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                      {language === "en" ? "Google AI & Gemini Unlimited MCQ Planner" : "গুগল এআই এবং জেমিনি আনলিমিটেড প্রশ্ন মেকার"}
+                    </h4>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                      {language === "en" 
+                        ? "Generate any number of high-quality questions for FREE! Use Google Search AI (Search Labs) or Gemini, copy our special prompt template, get correct JSON instantly, and paste it into the Bulk Importer above."
+                        : "সম্পূর্ণ বিনামূল্যে আনলিমিটেড মিক্সড প্রশ্ন জেনারেট করুন! গুগল এআই বা জেমিনি চ্যাটে আমাদের স্পেশাল প্রম্পটটি ব্যবহার করে মুহূর্তেই নিখুঁত JSON ফরম্যাটে প্রশ্নমালা কপি করে উপরের বাল্ক ইম্পোর্টারে লোড করতে পারবেন।"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-950/80 border border-slate-850 p-3.5 rounded-lg space-y-2.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-wider font-bold">
+                      {language === "en" ? "Interactive Prompt Template" : "এআই প্রম্পট টেমপ্লেট"}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const template = `Generate 15 diverse and fully accurate multiple choice questions with 4 options about general studies/technology suitable for school and competitive exams in Bangladesh. 
+
+Return ONLY a raw, valid JSON array of objects with the exact schema format. The options must be standard and diverse, and correctAnswer must be a 0-indexed integer (0 for option A, 1 for B, 2 for C, 3 for D). 
+
+The category should be ICT or General Science or National.
+Do NOT speak, do NOT wrap in markdown \`\`\`json blocks, do NOT write any markdown explanations or prologue/epilogue. Output only the pure, parsed JSON array.
+
+Example Schema Structure:
+[
+  {
+    "questionText": "Which major database query language is relational?",
+    "category": "ICT & Tech",
+    "options": ["SQL", "HTML", "CSS", "JSON"],
+    "correctAnswer": 0,
+    "marks": 5
+  }
+]`;
+                        navigator.clipboard.writeText(template);
+                        setPromptCopied(true);
+                        setTimeout(() => setPromptCopied(false), 2000);
+                      }}
+                      className="px-2.5 py-1 text-[10px] font-bold text-cyan-400 hover:text-cyan-300 bg-cyan-950/40 hover:bg-cyan-950/70 border border-cyan-500/20 rounded flex items-center gap-1.5 transition-all cursor-pointer"
+                    >
+                      {promptCopied ? (
+                        <>
+                          <Check className="w-3" />
+                          <span>{language === "en" ? "Copied Prompt!" : "কপি হয়েছে!"}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3" />
+                          <span>{language === "en" ? "Copy Prompter Tool" : "প্রম্পট কপি করুন"}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 font-serif leading-snug bg-slate-950/50 p-2.5 rounded border border-slate-900 overflow-x-auto max-h-36 font-mono select-all">
+                    Generate 15 diverse and fully accurate multiple choice questions with 4 options about studies/technology. Return ONLY a raw, valid JSON array with keys: `questionText`, `category`, `options` (array of strings), `correctAnswer` (0-indexed integer), `marks` (integer). Do not write any markdown code blocks or text explanations.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2.5 pt-1.5 text-xxs font-semibold">
+                  <a
+                    href="https://gemini.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 bg-indigo-950/60 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 hover:text-indigo-200 rounded-lg flex items-center gap-1.5 transition-all"
+                  >
+                    🚀 {language === "en" ? "Launch Google Gemini Chat" : "গুগল জেমিনি চ্যাট"}
+                  </a>
+                  <a
+                    href="https://aistudio.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 bg-slate-950 hover:bg-slate-850 border border-slate-750 text-slate-300 hover:text-slate-100 rounded-lg flex items-center gap-1.5 transition-all"
+                  >
+                    🛠️ {language === "en" ? "Launch Google AI Studio" : "গুগল এআই স্টুডিও"}
+                  </a>
+                </div>
               </div>
 
             </div>
